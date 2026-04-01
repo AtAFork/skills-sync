@@ -8,11 +8,15 @@ This folder contains two related tools:
 - `sync_claude_skills.py`: mirroring tool that treats `~/.agents/skills` as the
   source of truth for shared custom skills and mirrors them into
   `~/.claude/skills` as symlinks.
+- `sync-all.sh`: orchestration wrapper that also projects shared Codex config
+  files such as `~/.agents/codex/hooks.json` into `~/.codex/hooks.json`.
 
 This is aimed at the Codex + Claude split:
 
 - Codex reads `~/.agents/skills` directly.
 - Claude reads `~/.claude/skills`.
+- Codex hooks can live in `~/.agents/codex/hooks.json` and are symlinked into
+  `~/.codex/hooks.json`.
 
 The script is intentionally conservative:
 
@@ -30,6 +34,7 @@ The script is intentionally conservative:
 - `reconcile_agents_from_claude.py`: populate or update `~/.agents/skills` from
   Claude's skill directory
 - `sync_claude_skills.py`: sync tool
+- `sync-all.sh`: sync shared skills and shared Codex hook config
 - `backups/`: created on demand if you use `--adopt-identical`
 
 ## Usage
@@ -77,7 +82,7 @@ python3 sync_claude_skills.py \
 The agent is configured to:
 
 - run at login (`RunAtLoad`)
-- watch both skill directories for changes (`WatchPaths`)
+- watch both skill directories plus `~/.agents/codex` for changes (`WatchPaths`)
 - re-run every 5 minutes as a safety backstop (`StartInterval = 300`)
 
 This means:
@@ -128,6 +133,8 @@ After installation:
 
 - `~/.agents/skills` is the shared source of truth
 - `~/.claude/skills` contains symlinks pointing to the shared skills
+- `~/.agents/codex/hooks.json` is the shared source of truth for Codex hooks
+- `~/.codex/hooks.json` is a symlink pointing at that shared file
 - the launch agent keeps future additions/removals mirrored automatically
 - skills created directly in `~/.claude/skills` are automatically adopted into
   `~/.agents/skills` and replaced with symlinks

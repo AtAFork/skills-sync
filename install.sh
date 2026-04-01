@@ -11,10 +11,14 @@ fi
 
 CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR:-~/.claude/skills}"
 AGENTS_SKILLS_DIR="${AGENTS_SKILLS_DIR:-~/.agents/skills}"
+AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR:-~/.agents/codex}"
+CODEX_HOME_DIR="${CODEX_HOME_DIR:-~/.codex}"
 
 # Expand ~ to absolute path
 CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR/#\~/$HOME}"
 AGENTS_SKILLS_DIR="${AGENTS_SKILLS_DIR/#\~/$HOME}"
+AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR/#\~/$HOME}"
+CODEX_HOME_DIR="${CODEX_HOME_DIR/#\~/$HOME}"
 
 PLIST_LABEL="com.user.claude-skill-sync"
 PLIST_PATH="$HOME/Library/LaunchAgents/$PLIST_LABEL.plist"
@@ -24,6 +28,8 @@ echo "Installing launchd agent..."
 echo "  Script dir:   $DIR"
 echo "  Claude skills: $CLAUDE_SKILLS_DIR"
 echo "  Agents skills: $AGENTS_SKILLS_DIR"
+echo "  Agents codex:  $AGENTS_CODEX_DIR"
+echo "  Codex home:    $CODEX_HOME_DIR"
 echo "  Plist:         $PLIST_PATH"
 echo ""
 
@@ -57,6 +63,7 @@ cat > "$PLIST_PATH" <<PLIST
   <array>
     <string>$AGENTS_SKILLS_DIR</string>
     <string>$CLAUDE_SKILLS_DIR</string>
+    <string>$AGENTS_CODEX_DIR</string>
   </array>
 
   <key>StandardOutPath</key>
