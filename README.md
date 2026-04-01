@@ -1,6 +1,6 @@
 # Claude Skill Sync
 
-This folder contains two related tools:
+This folder contains tools for syncing skills and hooks across multiple AI agents:
 
 - `reconcile_agents_from_claude.py`: one-way reconciliation that copies skills
   from `~/.claude/skills` into `~/.agents/skills`, with Claude treated as the
@@ -8,15 +8,21 @@ This folder contains two related tools:
 - `sync_claude_skills.py`: mirroring tool that treats `~/.agents/skills` as the
   source of truth for shared custom skills and mirrors them into
   `~/.claude/skills` as symlinks.
-- `sync-all.sh`: orchestration wrapper that also projects shared Codex config
-  files such as `~/.agents/codex/hooks.json` into `~/.codex/hooks.json`.
+- `sync_opencode_skills.py`: mirroring tool that treats `~/.agents/skills` as the
+  source of truth and mirrors them into `~/.config/opencode/skills` as symlinks.
+- `sync-opencode-hooks.sh`: syncs `~/.agents/opencode/hooks/` to `~/.config/opencode/hooks/`.
+- `sync-all.sh`: orchestration wrapper that syncs skills for Claude and OpenCode,
+  plus shared hook configs for Codex and OpenCode.
 
-This is aimed at the Codex + Claude split:
+This is aimed at the Claude + Codex + OpenCode split:
 
-- Codex reads `~/.agents/skills` directly.
 - Claude reads `~/.claude/skills`.
+- Codex reads `~/.agents/skills` directly.
+- OpenCode reads `~/.config/opencode/skills`.
 - Codex hooks can live in `~/.agents/codex/hooks.json` and are symlinked into
   `~/.codex/hooks.json`.
+- OpenCode hooks can live in `~/.agents/opencode/hooks/` and are symlinked into
+  `~/.config/opencode/hooks/`.
 
 The script is intentionally conservative:
 
@@ -33,8 +39,10 @@ The script is intentionally conservative:
 
 - `reconcile_agents_from_claude.py`: populate or update `~/.agents/skills` from
   Claude's skill directory
-- `sync_claude_skills.py`: sync tool
-- `sync-all.sh`: sync shared skills and shared Codex hook config
+- `sync_claude_skills.py`: sync tool for Claude skills
+- `sync_opencode_skills.py`: sync tool for OpenCode skills
+- `sync-opencode-hooks.sh`: sync tool for OpenCode hooks
+- `sync-all.sh`: orchestration wrapper that syncs all skills and hooks
 - `backups/`: created on demand if you use `--adopt-identical`
 
 ## Usage
@@ -64,6 +72,40 @@ Apply safe changes and replace identical Claude directories with symlinks:
 python3 sync_claude_skills.py --apply --adopt-identical
 ```
 
+### OpenCode Skills
+
+Dry run:
+
+```bash
+python3 sync_opencode_skills.py
+```
+
+Apply safe changes:
+
+```bash
+python3 sync_opencode_skills.py --apply
+```
+
+### OpenCode Hooks
+
+```bash
+./sync-opencode-hooks.sh
+```
+
+### Sync All (Claude + OpenCode + Hooks)
+
+Run the orchestration wrapper to sync everything:
+
+```bash
+./sync-all.sh
+```
+
+Apply all changes (dry-run by default for safety):
+
+```bash
+./sync-all.sh --apply
+```
+
 Use custom paths:
 
 ```bash
@@ -82,7 +124,7 @@ python3 sync_claude_skills.py \
 The agent is configured to:
 
 - run at login (`RunAtLoad`)
-- watch both skill directories plus `~/.agents/codex` for changes (`WatchPaths`)
+- watch skill directories and hook directories for changes (`WatchPaths`)
 - re-run every 5 minutes as a safety backstop (`StartInterval = 300`)
 
 This means:
@@ -127,14 +169,30 @@ For stale Claude-side symlinks that point back into the source directory:
 
 - If the source skill no longer exists, the script removes the stale symlink.
 
+### `sync_opencode_skills.py`
+
+Behavior is identical to `sync_claude_skills.py`, but for OpenCode's skill directory
+(`~/.config/opencode/skills`).
+
+### `sync-opencode-hooks.sh`
+
+Syncs hook files from `~/.agents/opencode/hooks/` to `~/.config/opencode/hooks/`:
+
+- Creates symlinks for any hooks that exist in the source directory.
+- Backs up any existing real files in the target directory.
+- Removes stale symlinks that point to deleted source hooks.
+
 ## How It Works
 
 After installation:
 
-- `~/.agents/skills` is the shared source of truth
+- `~/.agents/skills` is the shared source of truth for all skills
 - `~/.claude/skills` contains symlinks pointing to the shared skills
+- `~/.config/opencode/skills` contains symlinks pointing to the shared skills
 - `~/.agents/codex/hooks.json` is the shared source of truth for Codex hooks
 - `~/.codex/hooks.json` is a symlink pointing at that shared file
+- `~/.agents/opencode/hooks/` is the shared source of truth for OpenCode hooks
+- `~/.config/opencode/hooks/` contains symlinks pointing to shared hooks
 - the launch agent keeps future additions/removals mirrored automatically
 - skills created directly in `~/.claude/skills` are automatically adopted into
   `~/.agents/skills` and replaced with symlinks
