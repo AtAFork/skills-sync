@@ -11,14 +11,26 @@ fi
 
 CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR:-~/.claude/skills}"
 AGENTS_SKILLS_DIR="${AGENTS_SKILLS_DIR:-~/.agents/skills}"
+AGENTS_ROOT_DIR="${AGENTS_ROOT_DIR:-~/.agents}"
 AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR:-~/.agents/codex}"
+AGENTS_OPENCODE_DIR="${AGENTS_OPENCODE_DIR:-~/.agents/opencode}"
+AGENTS_CURSOR_DIR="${AGENTS_CURSOR_DIR:-~/.agents/cursor}"
+CLAUDE_HOME_DIR="${CLAUDE_HOME_DIR:-~/.claude}"
 CODEX_HOME_DIR="${CODEX_HOME_DIR:-~/.codex}"
+CURSOR_HOME_DIR="${CURSOR_HOME_DIR:-~/.cursor}"
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-~/.config/opencode}"
 
 # Expand ~ to absolute path
 CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR/#\~/$HOME}"
 AGENTS_SKILLS_DIR="${AGENTS_SKILLS_DIR/#\~/$HOME}"
+AGENTS_ROOT_DIR="${AGENTS_ROOT_DIR/#\~/$HOME}"
 AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR/#\~/$HOME}"
+AGENTS_OPENCODE_DIR="${AGENTS_OPENCODE_DIR/#\~/$HOME}"
+AGENTS_CURSOR_DIR="${AGENTS_CURSOR_DIR/#\~/$HOME}"
+CLAUDE_HOME_DIR="${CLAUDE_HOME_DIR/#\~/$HOME}"
 CODEX_HOME_DIR="${CODEX_HOME_DIR/#\~/$HOME}"
+CURSOR_HOME_DIR="${CURSOR_HOME_DIR/#\~/$HOME}"
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR/#\~/$HOME}"
 
 PLIST_LABEL="com.user.claude-skill-sync"
 PLIST_PATH="$HOME/Library/LaunchAgents/$PLIST_LABEL.plist"
@@ -28,8 +40,14 @@ echo "Installing launchd agent..."
 echo "  Script dir:   $DIR"
 echo "  Claude skills: $CLAUDE_SKILLS_DIR"
 echo "  Agents skills: $AGENTS_SKILLS_DIR"
+echo "  Agents root:   $AGENTS_ROOT_DIR"
 echo "  Agents codex:  $AGENTS_CODEX_DIR"
+echo "  Agents open:   $AGENTS_OPENCODE_DIR"
+echo "  Agents cursor: $AGENTS_CURSOR_DIR"
+echo "  Claude home:   $CLAUDE_HOME_DIR"
 echo "  Codex home:    $CODEX_HOME_DIR"
+echo "  Cursor home:   $CURSOR_HOME_DIR"
+echo "  OpenCode cfg:  $OPENCODE_CONFIG_DIR"
 echo "  Plist:         $PLIST_PATH"
 echo ""
 
@@ -61,9 +79,16 @@ cat > "$PLIST_PATH" <<PLIST
 
   <key>WatchPaths</key>
   <array>
+    <string>$AGENTS_ROOT_DIR</string>
     <string>$AGENTS_SKILLS_DIR</string>
     <string>$CLAUDE_SKILLS_DIR</string>
     <string>$AGENTS_CODEX_DIR</string>
+    <string>$AGENTS_OPENCODE_DIR</string>
+    <string>$AGENTS_CURSOR_DIR</string>
+    <string>$CLAUDE_HOME_DIR</string>
+    <string>$CODEX_HOME_DIR</string>
+    <string>$CURSOR_HOME_DIR</string>
+    <string>$OPENCODE_CONFIG_DIR</string>
   </array>
 
   <key>StandardOutPath</key>

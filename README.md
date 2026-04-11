@@ -12,7 +12,8 @@ This folder contains tools for syncing skills and hooks across multiple AI agent
   source of truth and mirrors them into `~/.config/opencode/skills` as symlinks.
 - `sync-opencode-hooks.sh`: syncs `~/.agents/opencode/hooks/` to `~/.config/opencode/hooks/`.
 - `sync-all.sh`: orchestration wrapper that syncs skills for Claude and OpenCode,
-  plus shared hook configs for Codex and OpenCode.
+  plus shared hook configs and top-level instruction files for Codex, Claude,
+  Cursor, and OpenCode.
 
 This is aimed at the Claude + Codex + OpenCode split:
 
@@ -21,6 +22,16 @@ This is aimed at the Claude + Codex + OpenCode split:
 - OpenCode reads `~/.config/opencode/skills`.
 - Codex hooks can live in `~/.agents/codex/hooks.json` and are symlinked into
   `~/.codex/hooks.json`.
+- Shared Codex instructions can live in `~/.agents/AGENTS.md` and are symlinked
+  into `~/.codex/AGENTS.md`.
+- Shared Claude instructions can live in `~/.agents/CLAUDE.md` and are symlinked
+  into `~/.claude/CLAUDE.md`.
+- Cursor can also receive symlinked shared instruction entrypoints at
+  `~/.cursor/AGENTS.md` and `~/.cursor/CLAUDE.md`, plus an optional Cursor rule
+  bridge at `~/.cursor/rules/global-agents.mdc`.
+- OpenCode global rules can live in `~/.agents/AGENTS.md` and are symlinked into
+  `~/.config/opencode/AGENTS.md`. Additional instruction files can be referenced
+  from `~/.config/opencode/opencode.json`.
 - OpenCode hooks can live in `~/.agents/opencode/hooks/` and are symlinked into
   `~/.config/opencode/hooks/`.
 
@@ -191,6 +202,16 @@ After installation:
 - `~/.config/opencode/skills` contains symlinks pointing to the shared skills
 - `~/.agents/codex/hooks.json` is the shared source of truth for Codex hooks
 - `~/.codex/hooks.json` is a symlink pointing at that shared file
+- `~/.agents/AGENTS.md` is the shared source of truth for Codex/global
+  AGENTS-style instructions and is symlinked into `~/.codex/AGENTS.md`
+- `~/.agents/CLAUDE.md` is the shared source of truth for Claude/global
+  CLAUDE-style instructions and is symlinked into `~/.claude/CLAUDE.md`
+- `~/.cursor/AGENTS.md` and `~/.cursor/CLAUDE.md` can be symlinked from those
+  same shared files, with `~/.cursor/rules/global-agents.mdc` as a Cursor rule
+  bridge sourced from `~/.agents/cursor/rules/global-agents.mdc`
+- `~/.config/opencode/AGENTS.md` can be symlinked from `~/.agents/AGENTS.md`
+  so OpenCode picks up the same global rules, while `opencode.json` can include
+  additional shared instruction files such as `~/.agents/CLAUDE.md`
 - `~/.agents/opencode/hooks/` is the shared source of truth for OpenCode hooks
 - `~/.config/opencode/hooks/` contains symlinks pointing to shared hooks
 - the launch agent keeps future additions/removals mirrored automatically

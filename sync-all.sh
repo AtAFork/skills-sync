@@ -11,19 +11,37 @@ fi
 
 CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR:-~/.claude/skills}"
 AGENTS_SKILLS_DIR="${AGENTS_SKILLS_DIR:-~/.agents/skills}"
+AGENTS_ROOT_DIR="${AGENTS_ROOT_DIR:-~/.agents}"
 AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR:-~/.agents/codex}"
 AGENTS_OPENCODE_DIR="${AGENTS_OPENCODE_DIR:-~/.agents/opencode}"
+AGENTS_CURSOR_DIR="${AGENTS_CURSOR_DIR:-~/.agents/cursor}"
+CLAUDE_HOME_DIR="${CLAUDE_HOME_DIR:-~/.claude}"
 CODEX_HOME_DIR="${CODEX_HOME_DIR:-~/.codex}"
+CURSOR_HOME_DIR="${CURSOR_HOME_DIR:-~/.cursor}"
 OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-~/.config/opencode}"
 
 # Expand ~ to absolute path
 CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR/#\~/$HOME}"
 AGENTS_SKILLS_DIR="${AGENTS_SKILLS_DIR/#\~/$HOME}"
+AGENTS_ROOT_DIR="${AGENTS_ROOT_DIR/#\~/$HOME}"
 AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR/#\~/$HOME}"
 AGENTS_OPENCODE_DIR="${AGENTS_OPENCODE_DIR/#\~/$HOME}"
+AGENTS_CURSOR_DIR="${AGENTS_CURSOR_DIR/#\~/$HOME}"
+CLAUDE_HOME_DIR="${CLAUDE_HOME_DIR/#\~/$HOME}"
 CODEX_HOME_DIR="${CODEX_HOME_DIR/#\~/$HOME}"
+CURSOR_HOME_DIR="${CURSOR_HOME_DIR/#\~/$HOME}"
+OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR/#\~/$HOME}"
 CODEX_HOOKS_SOURCE="$AGENTS_CODEX_DIR/hooks.json"
 CODEX_HOOKS_TARGET="$CODEX_HOME_DIR/hooks.json"
+AGENTS_MD_SOURCE="$AGENTS_ROOT_DIR/AGENTS.md"
+CLAUDE_MD_SOURCE="$AGENTS_ROOT_DIR/CLAUDE.md"
+CODEX_AGENTS_TARGET="$CODEX_HOME_DIR/AGENTS.md"
+CLAUDE_MD_TARGET="$CLAUDE_HOME_DIR/CLAUDE.md"
+CURSOR_AGENTS_TARGET="$CURSOR_HOME_DIR/AGENTS.md"
+CURSOR_CLAUDE_TARGET="$CURSOR_HOME_DIR/CLAUDE.md"
+CURSOR_RULE_SOURCE="$AGENTS_CURSOR_DIR/rules/global-agents.mdc"
+CURSOR_RULE_TARGET="$CURSOR_HOME_DIR/rules/global-agents.mdc"
+OPENCODE_AGENTS_TARGET="$OPENCODE_CONFIG_DIR/AGENTS.md"
 OPENCODE_HOOKS_SOURCE="$AGENTS_OPENCODE_DIR/hooks"
 OPENCODE_HOOKS_TARGET="$OPENCODE_CONFIG_DIR/hooks"
 
@@ -80,6 +98,34 @@ sync_shared_file \
   "$CODEX_HOOKS_SOURCE" \
   "$CODEX_HOOKS_TARGET" \
   "$DIR/backups/codex-config"
+
+# Step 3b: Ensure shared top-level instruction files are linked into tool homes
+echo ""
+echo "=== Step 3b: Sync Shared Instruction Files ==="
+sync_shared_file \
+  "$AGENTS_MD_SOURCE" \
+  "$CODEX_AGENTS_TARGET" \
+  "$DIR/backups/codex-config"
+sync_shared_file \
+  "$CLAUDE_MD_SOURCE" \
+  "$CLAUDE_MD_TARGET" \
+  "$DIR/backups/claude-config"
+sync_shared_file \
+  "$AGENTS_MD_SOURCE" \
+  "$CURSOR_AGENTS_TARGET" \
+  "$DIR/backups/cursor-config"
+sync_shared_file \
+  "$CLAUDE_MD_SOURCE" \
+  "$CURSOR_CLAUDE_TARGET" \
+  "$DIR/backups/cursor-config"
+sync_shared_file \
+  "$CURSOR_RULE_SOURCE" \
+  "$CURSOR_RULE_TARGET" \
+  "$DIR/backups/cursor-config"
+sync_shared_file \
+  "$AGENTS_MD_SOURCE" \
+  "$OPENCODE_AGENTS_TARGET" \
+  "$DIR/backups/opencode-config"
 
 # Step 4: Sync OpenCode hooks from ~/.agents/opencode/hooks/ to ~/.config/opencode/hooks/
 echo ""
