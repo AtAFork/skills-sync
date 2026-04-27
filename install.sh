@@ -12,6 +12,7 @@ fi
 CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR:-~/.claude/skills}"
 AGENTS_SKILLS_DIR="${AGENTS_SKILLS_DIR:-~/.agents/skills}"
 AGENTS_ROOT_DIR="${AGENTS_ROOT_DIR:-~/.agents}"
+AGENTS_CLAUDE_DIR="${AGENTS_CLAUDE_DIR:-~/.agents/claude}"
 AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR:-~/.agents/codex}"
 AGENTS_OPENCODE_DIR="${AGENTS_OPENCODE_DIR:-~/.agents/opencode}"
 AGENTS_CURSOR_DIR="${AGENTS_CURSOR_DIR:-~/.agents/cursor}"
@@ -24,6 +25,7 @@ OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-~/.config/opencode}"
 CLAUDE_SKILLS_DIR="${CLAUDE_SKILLS_DIR/#\~/$HOME}"
 AGENTS_SKILLS_DIR="${AGENTS_SKILLS_DIR/#\~/$HOME}"
 AGENTS_ROOT_DIR="${AGENTS_ROOT_DIR/#\~/$HOME}"
+AGENTS_CLAUDE_DIR="${AGENTS_CLAUDE_DIR/#\~/$HOME}"
 AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR/#\~/$HOME}"
 AGENTS_OPENCODE_DIR="${AGENTS_OPENCODE_DIR/#\~/$HOME}"
 AGENTS_CURSOR_DIR="${AGENTS_CURSOR_DIR/#\~/$HOME}"
@@ -41,6 +43,7 @@ echo "  Script dir:   $DIR"
 echo "  Claude skills: $CLAUDE_SKILLS_DIR"
 echo "  Agents skills: $AGENTS_SKILLS_DIR"
 echo "  Agents root:   $AGENTS_ROOT_DIR"
+echo "  Agents Claude: $AGENTS_CLAUDE_DIR"
 echo "  Agents codex:  $AGENTS_CODEX_DIR"
 echo "  Agents open:   $AGENTS_OPENCODE_DIR"
 echo "  Agents cursor: $AGENTS_CURSOR_DIR"
@@ -80,6 +83,7 @@ cat > "$PLIST_PATH" <<PLIST
   <key>WatchPaths</key>
   <array>
     <string>$AGENTS_ROOT_DIR</string>
+    <string>$AGENTS_CLAUDE_DIR</string>
     <string>$AGENTS_SKILLS_DIR</string>
     <string>$CLAUDE_SKILLS_DIR</string>
     <string>$AGENTS_CODEX_DIR</string>

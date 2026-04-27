@@ -124,6 +124,18 @@ sync_shared_file \
   "$CODEX_HOOKS_TARGET" \
   "$DIR/backups/codex-config"
 
+if [ -d "$AGENTS_CODEX_DIR" ]; then
+  echo "SYNC     Codex helper scripts from $AGENTS_CODEX_DIR"
+  find "$AGENTS_CODEX_DIR" -maxdepth 1 -type f ! -name 'hooks.json' | sort | while read -r helper_file; do
+    sync_shared_file \
+      "$helper_file" \
+      "$CODEX_HOME_DIR/$(basename "$helper_file")" \
+      "$DIR/backups/codex-config/helpers"
+  done
+else
+  echo "SKIP     Missing Codex config source: $AGENTS_CODEX_DIR"
+fi
+
 if [ -d "$CODEX_AGENTS_SOURCE_DIR" ]; then
   echo "SYNC     Codex custom agents from $CODEX_AGENTS_SOURCE_DIR"
   mkdir -p "$CODEX_AGENTS_TARGET_DIR"

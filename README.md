@@ -8,6 +8,7 @@ This folder contains tools for syncing skills and hooks across multiple AI agent
 - `sync_claude_skills.py`: mirroring tool that treats `~/.agents/skills` as the
   source of truth for shared custom skills and mirrors them into
   `~/.claude/skills` as symlinks.
+- `sync-claude-hooks.sh`: syncs `~/.agents/claude/hooks/` to `~/.claude/hooks/`.
 - `sync_opencode_skills.py`: mirroring tool that treats `~/.agents/skills` as the
   source of truth and mirrors them into `~/.config/opencode/skills` as symlinks.
 - `sync-opencode-hooks.sh`: syncs `~/.agents/opencode/hooks/` to `~/.config/opencode/hooks/`.
@@ -22,6 +23,12 @@ This is aimed at the Claude + Codex + OpenCode split:
 - OpenCode reads `~/.config/opencode/skills`.
 - Codex hooks can live in `~/.agents/codex/hooks.json` and are symlinked into
   `~/.codex/hooks.json`.
+- Codex hook helper scripts can live beside that file in `~/.agents/codex/`
+  and are symlinked into `~/.codex/`.
+- Claude hooks can live in `~/.agents/claude/hooks/` and are symlinked into
+  `~/.claude/hooks/`.
+- Shared known-mistake patterns can live in `~/.agents/claude/known-mistakes.json`
+  and are symlinked into `~/.claude/known-mistakes.json`.
 - Shared Codex instructions can live in `~/.agents/AGENTS.md` and are symlinked
   into `~/.codex/AGENTS.md`.
 - Shared Claude instructions can live in `~/.agents/CLAUDE.md` and are symlinked
@@ -51,6 +58,7 @@ The script is intentionally conservative:
 - `reconcile_agents_from_claude.py`: populate or update `~/.agents/skills` from
   Claude's skill directory
 - `sync_claude_skills.py`: sync tool for Claude skills
+- `sync-claude-hooks.sh`: sync tool for Claude hooks
 - `sync_opencode_skills.py`: sync tool for OpenCode skills
 - `sync-opencode-hooks.sh`: sync tool for OpenCode hooks
 - `sync-all.sh`: orchestration wrapper that syncs all skills and hooks
@@ -95,6 +103,12 @@ Apply safe changes:
 
 ```bash
 python3 sync_opencode_skills.py --apply
+```
+
+### Claude Hooks
+
+```bash
+./sync-claude-hooks.sh
 ```
 
 ### OpenCode Hooks
@@ -200,8 +214,14 @@ After installation:
 - `~/.agents/skills` is the shared source of truth for all skills
 - `~/.claude/skills` contains symlinks pointing to the shared skills
 - `~/.config/opencode/skills` contains symlinks pointing to the shared skills
+- `~/.agents/claude/hooks/` is the shared source of truth for Claude hooks
+- `~/.claude/hooks` is a symlink pointing at that shared directory
+- `~/.agents/claude/known-mistakes.json` is the shared source of truth for
+  known-mistake patterns and is symlinked into `~/.claude/known-mistakes.json`
 - `~/.agents/codex/hooks.json` is the shared source of truth for Codex hooks
 - `~/.codex/hooks.json` is a symlink pointing at that shared file
+- top-level helper scripts in `~/.agents/codex/` are symlinked into
+  `~/.codex/` so hook-adjacent scripts are carried by the same sync path
 - `~/.agents/AGENTS.md` is the shared source of truth for Codex/global
   AGENTS-style instructions and is symlinked into `~/.codex/AGENTS.md`
 - `~/.agents/CLAUDE.md` is the shared source of truth for Claude/global
