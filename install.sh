@@ -84,10 +84,13 @@ cat > "$PLIST_PATH" <<PLIST
   <array>
     <string>$AGENTS_ROOT_DIR</string>
     <string>$AGENTS_CLAUDE_DIR</string>
+    <string>$AGENTS_CLAUDE_DIR/.mcp.json</string>
     <string>$AGENTS_SKILLS_DIR</string>
     <string>$CLAUDE_SKILLS_DIR</string>
     <string>$AGENTS_CODEX_DIR</string>
+    <string>$AGENTS_CODEX_DIR/config.toml</string>
     <string>$AGENTS_OPENCODE_DIR</string>
+    <string>$AGENTS_OPENCODE_DIR/opencode.json</string>
     <string>$AGENTS_CURSOR_DIR</string>
     <string>$CLAUDE_HOME_DIR</string>
     <string>$CODEX_HOME_DIR</string>
@@ -96,7 +99,7 @@ cat > "$PLIST_PATH" <<PLIST
   </array>
 
   <key>StandardOutPath</key>
-  <string>$LOG_DIR/claude-skill-sync.log</string>
+  <string>/dev/null</string>
 
   <key>StandardErrorPath</key>
   <string>$LOG_DIR/claude-skill-sync.err.log</string>

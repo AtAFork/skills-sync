@@ -16,10 +16,14 @@ AGENTS_CLAUDE_DIR="${AGENTS_CLAUDE_DIR:-~/.agents/claude}"
 AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR:-~/.agents/codex}"
 AGENTS_OPENCODE_DIR="${AGENTS_OPENCODE_DIR:-~/.agents/opencode}"
 AGENTS_CURSOR_DIR="${AGENTS_CURSOR_DIR:-~/.agents/cursor}"
+AGENTS_CMUX_DIR="${AGENTS_CMUX_DIR:-~/.agents/cmux}"
+AGENTS_LAZYGIT_DIR="${AGENTS_LAZYGIT_DIR:-~/.agents/lazygit}"
 CLAUDE_HOME_DIR="${CLAUDE_HOME_DIR:-~/.claude}"
 CODEX_HOME_DIR="${CODEX_HOME_DIR:-~/.codex}"
 CURSOR_HOME_DIR="${CURSOR_HOME_DIR:-~/.cursor}"
 OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-~/.config/opencode}"
+CMUX_CONFIG_DIR="${CMUX_CONFIG_DIR:-~/.config/cmux}"
+LAZYGIT_CONFIG_DIR="${LAZYGIT_CONFIG_DIR:-~/Library/Application Support/lazygit}"
 SYNC_OPTIONAL_HOOKS="${SYNC_OPTIONAL_HOOKS:-1}"
 
 # Expand ~ to absolute path
@@ -30,18 +34,29 @@ AGENTS_CLAUDE_DIR="${AGENTS_CLAUDE_DIR/#\~/$HOME}"
 AGENTS_CODEX_DIR="${AGENTS_CODEX_DIR/#\~/$HOME}"
 AGENTS_OPENCODE_DIR="${AGENTS_OPENCODE_DIR/#\~/$HOME}"
 AGENTS_CURSOR_DIR="${AGENTS_CURSOR_DIR/#\~/$HOME}"
+AGENTS_CMUX_DIR="${AGENTS_CMUX_DIR/#\~/$HOME}"
+AGENTS_LAZYGIT_DIR="${AGENTS_LAZYGIT_DIR/#\~/$HOME}"
 CLAUDE_HOME_DIR="${CLAUDE_HOME_DIR/#\~/$HOME}"
 CODEX_HOME_DIR="${CODEX_HOME_DIR/#\~/$HOME}"
 CURSOR_HOME_DIR="${CURSOR_HOME_DIR/#\~/$HOME}"
 OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR/#\~/$HOME}"
+CMUX_CONFIG_DIR="${CMUX_CONFIG_DIR/#\~/$HOME}"
+LAZYGIT_CONFIG_DIR="${LAZYGIT_CONFIG_DIR/#\~/$HOME}"
 CLAUDE_HOOKS_SOURCE="$AGENTS_CLAUDE_DIR/hooks"
 CLAUDE_HOOKS_TARGET="$CLAUDE_HOME_DIR/hooks"
 CLAUDE_KNOWN_MISTAKES_SOURCE="$AGENTS_CLAUDE_DIR/known-mistakes.json"
 CLAUDE_KNOWN_MISTAKES_TARGET="$CLAUDE_HOME_DIR/known-mistakes.json"
+CLAUDE_MCP_SOURCE="$AGENTS_CLAUDE_DIR/.mcp.json"
+# Claude Code reads MCP user-scope config from ~/.claude.json top-level "mcpServers",
+# not from ~/.claude/.mcp.json. We merge into the file Claude Code actually reads.
+CLAUDE_MCP_USER_CONFIG="$HOME/.claude.json"
+CLAUDE_MCP_MANAGED_MANIFEST="$AGENTS_CLAUDE_DIR/.mcp.managed-keys.json"
 OPENCODE_HOOKS_SOURCE="$AGENTS_OPENCODE_DIR/hooks"
 OPENCODE_HOOKS_TARGET="$OPENCODE_CONFIG_DIR/hooks"
 CODEX_HOOKS_SOURCE="$AGENTS_CODEX_DIR/hooks.json"
 CODEX_HOOKS_TARGET="$CODEX_HOME_DIR/hooks.json"
+CODEX_CONFIG_SOURCE="$AGENTS_CODEX_DIR/config.toml"
+CODEX_CONFIG_TARGET="$CODEX_HOME_DIR/config.toml"
 CODEX_AGENTS_SOURCE_DIR="$AGENTS_CODEX_DIR/agents"
 CODEX_AGENTS_TARGET_DIR="$CODEX_HOME_DIR/agents"
 AGENTS_MD_SOURCE="$AGENTS_ROOT_DIR/AGENTS.md"
@@ -53,6 +68,10 @@ CURSOR_CLAUDE_TARGET="$CURSOR_HOME_DIR/CLAUDE.md"
 CURSOR_RULE_SOURCE="$AGENTS_CURSOR_DIR/rules/global-agents.mdc"
 CURSOR_RULE_TARGET="$CURSOR_HOME_DIR/rules/global-agents.mdc"
 OPENCODE_AGENTS_TARGET="$OPENCODE_CONFIG_DIR/AGENTS.md"
+OPENCODE_CONFIG_SOURCE="$AGENTS_OPENCODE_DIR/opencode.json"
+OPENCODE_CONFIG_TARGET="$OPENCODE_CONFIG_DIR/opencode.json"
+OPENCODE_OPENAGENT_CONFIG_SOURCE="$AGENTS_OPENCODE_DIR/oh-my-openagent.json"
+OPENCODE_OPENAGENT_CONFIG_TARGET="$OPENCODE_CONFIG_DIR/oh-my-openagent.json"
 OPENCODE_HOOKS_SOURCE="$AGENTS_OPENCODE_DIR/hooks"
 OPENCODE_HOOKS_TARGET="$OPENCODE_CONFIG_DIR/hooks"
 
@@ -124,9 +143,14 @@ sync_shared_file \
   "$CODEX_HOOKS_TARGET" \
   "$DIR/backups/codex-config"
 
+sync_shared_file \
+  "$CODEX_CONFIG_SOURCE" \
+  "$CODEX_CONFIG_TARGET" \
+  "$DIR/backups/codex-config"
+
 if [ -d "$AGENTS_CODEX_DIR" ]; then
   echo "SYNC     Codex helper scripts from $AGENTS_CODEX_DIR"
-  find "$AGENTS_CODEX_DIR" -maxdepth 1 -type f ! -name 'hooks.json' | sort | while read -r helper_file; do
+  find "$AGENTS_CODEX_DIR" -maxdepth 1 -type f ! -name 'hooks.json' ! -name 'config.toml' | sort | while read -r helper_file; do
     sync_shared_file \
       "$helper_file" \
       "$CODEX_HOME_DIR/$(basename "$helper_file")" \
@@ -139,7 +163,7 @@ fi
 if [ -d "$CODEX_AGENTS_SOURCE_DIR" ]; then
   echo "SYNC     Codex custom agents from $CODEX_AGENTS_SOURCE_DIR"
   mkdir -p "$CODEX_AGENTS_TARGET_DIR"
-  find "$CODEX_AGENTS_SOURCE_DIR" -maxdepth 1 -type f -name '*.toml' | sort | while read -r agent_file; do
+  find "$CODEX_AGENTS_SOURCE_DIR" -maxdepth 1 \( -type f -o -type l \) -name '*.toml' | sort | while read -r agent_file; do
     sync_shared_file \
       "$agent_file" \
       "$CODEX_AGENTS_TARGET_DIR/$(basename "$agent_file")" \
@@ -153,6 +177,13 @@ sync_shared_file \
   "$CLAUDE_KNOWN_MISTAKES_SOURCE" \
   "$CLAUDE_KNOWN_MISTAKES_TARGET" \
   "$DIR/backups/claude-config"
+
+# MCP servers: merge ~/.agents/claude/.mcp.json into ~/.claude.json top-level mcpServers.
+# Symlinking to ~/.claude/.mcp.json does NOT work — Claude Code ignores that path.
+python3 "$DIR/merge_claude_mcp_servers.py" \
+  --source "$CLAUDE_MCP_SOURCE" \
+  --target "$CLAUDE_MCP_USER_CONFIG" \
+  --manifest "$CLAUDE_MCP_MANAGED_MANIFEST"
 
 # Step 3b: Ensure shared top-level instruction files are linked into tool homes
 echo ""
@@ -173,14 +204,85 @@ sync_shared_file \
   "$CLAUDE_MD_SOURCE" \
   "$CURSOR_CLAUDE_TARGET" \
   "$DIR/backups/cursor-config"
-sync_shared_file \
-  "$CURSOR_RULE_SOURCE" \
-  "$CURSOR_RULE_TARGET" \
-  "$DIR/backups/cursor-config"
+if [ -d "$AGENTS_CURSOR_DIR/rules" ]; then
+  find "$AGENTS_CURSOR_DIR/rules" -maxdepth 1 -type f -name '*.mdc' | sort | while read -r rule_file; do
+    sync_shared_file \
+      "$rule_file" \
+      "$CURSOR_HOME_DIR/rules/$(basename "$rule_file")" \
+      "$DIR/backups/cursor-config"
+  done
+else
+  echo "SKIP     Missing Cursor rules source: $AGENTS_CURSOR_DIR/rules"
+fi
 sync_shared_file \
   "$AGENTS_MD_SOURCE" \
   "$OPENCODE_AGENTS_TARGET" \
   "$DIR/backups/opencode-config"
+sync_shared_file \
+  "$OPENCODE_CONFIG_SOURCE" \
+  "$OPENCODE_CONFIG_TARGET" \
+  "$DIR/backups/opencode-config"
+sync_shared_file \
+  "$OPENCODE_OPENAGENT_CONFIG_SOURCE" \
+  "$OPENCODE_OPENAGENT_CONFIG_TARGET" \
+  "$DIR/backups/opencode-config"
+sync_shared_file \
+  "$AGENTS_CMUX_DIR/dock.json" \
+  "$CMUX_CONFIG_DIR/dock.json" \
+  "$DIR/backups/cmux-config"
+sync_shared_file \
+  "$AGENTS_LAZYGIT_DIR/config.yml" \
+  "$LAZYGIT_CONFIG_DIR/config.yml" \
+  "$DIR/backups/lazygit-config"
+
+# Step 3c: Sync custom theme files for Claude, Codex, and OpenCode TUI tools.
+echo ""
+echo "=== Step 3c: Sync Custom Themes ==="
+
+CLAUDE_THEMES_SOURCE_DIR="$AGENTS_CLAUDE_DIR/themes"
+CLAUDE_THEMES_TARGET_DIR="$CLAUDE_HOME_DIR/themes"
+if [ -d "$CLAUDE_THEMES_SOURCE_DIR" ]; then
+  echo "SYNC     Claude custom themes from $CLAUDE_THEMES_SOURCE_DIR"
+  mkdir -p "$CLAUDE_THEMES_TARGET_DIR"
+  find "$CLAUDE_THEMES_SOURCE_DIR" -maxdepth 1 -type f -name '*.json' | sort | while read -r theme_file; do
+    sync_shared_file \
+      "$theme_file" \
+      "$CLAUDE_THEMES_TARGET_DIR/$(basename "$theme_file")" \
+      "$DIR/backups/claude-config/themes"
+  done
+else
+  echo "SKIP     Missing Claude themes source: $CLAUDE_THEMES_SOURCE_DIR"
+fi
+
+CODEX_THEMES_SOURCE_DIR="$AGENTS_CODEX_DIR/themes"
+CODEX_THEMES_TARGET_DIR="$CODEX_HOME_DIR/themes"
+if [ -d "$CODEX_THEMES_SOURCE_DIR" ]; then
+  echo "SYNC     Codex custom themes from $CODEX_THEMES_SOURCE_DIR"
+  mkdir -p "$CODEX_THEMES_TARGET_DIR"
+  find "$CODEX_THEMES_SOURCE_DIR" -maxdepth 1 -type f -name '*.tmTheme' | sort | while read -r theme_file; do
+    sync_shared_file \
+      "$theme_file" \
+      "$CODEX_THEMES_TARGET_DIR/$(basename "$theme_file")" \
+      "$DIR/backups/codex-config/themes"
+  done
+else
+  echo "SKIP     Missing Codex themes source: $CODEX_THEMES_SOURCE_DIR"
+fi
+
+OPENCODE_THEMES_SOURCE_DIR="$AGENTS_OPENCODE_DIR/themes"
+OPENCODE_THEMES_TARGET_DIR="$OPENCODE_CONFIG_DIR/themes"
+if [ -d "$OPENCODE_THEMES_SOURCE_DIR" ]; then
+  echo "SYNC     OpenCode custom themes from $OPENCODE_THEMES_SOURCE_DIR"
+  mkdir -p "$OPENCODE_THEMES_TARGET_DIR"
+  find "$OPENCODE_THEMES_SOURCE_DIR" -maxdepth 1 -type f \( -name '*.json' -o -name '*.jsonc' \) | sort | while read -r theme_file; do
+    sync_shared_file \
+      "$theme_file" \
+      "$OPENCODE_THEMES_TARGET_DIR/$(basename "$theme_file")" \
+      "$DIR/backups/opencode-config/themes"
+  done
+else
+  echo "SKIP     Missing OpenCode themes source: $OPENCODE_THEMES_SOURCE_DIR"
+fi
 
 # Step 4: Sync OpenCode hooks from ~/.agents/opencode/hooks/ to ~/.config/opencode/hooks/
 echo ""
