@@ -1,3 +1,5 @@
+
+
 # Claude Skill Sync
 
 This folder contains tools for syncing skills and hooks across multiple AI agents:
@@ -62,6 +64,7 @@ The script is intentionally conservative:
 - `sync_opencode_skills.py`: sync tool for OpenCode skills
 - `sync-opencode-hooks.sh`: sync tool for OpenCode hooks
 - `sync-all.sh`: orchestration wrapper that syncs all skills and hooks
+- `merge_claude_mcp_servers.py`: merges MCP server configurations from `~/.agents/claude/.mcp.json` into `~/.claude.json`
 - `backups/`: created on demand if you use `--adopt-identical`
 
 ## Usage
