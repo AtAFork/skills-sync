@@ -20,6 +20,7 @@ AGENTS_CMUX_DIR="${AGENTS_CMUX_DIR:-~/.agents/cmux}"
 AGENTS_LAZYGIT_DIR="${AGENTS_LAZYGIT_DIR:-~/.agents/lazygit}"
 CLAUDE_HOME_DIR="${CLAUDE_HOME_DIR:-~/.claude}"
 CODEX_HOME_DIR="${CODEX_HOME_DIR:-~/.codex}"
+CC_SAFETY_NET_HOME_DIR="${CC_SAFETY_NET_HOME_DIR:-~/.cc-safety-net}"
 CURSOR_HOME_DIR="${CURSOR_HOME_DIR:-~/.cursor}"
 OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR:-~/.config/opencode}"
 CMUX_CONFIG_DIR="${CMUX_CONFIG_DIR:-~/.config/cmux}"
@@ -38,12 +39,15 @@ AGENTS_CMUX_DIR="${AGENTS_CMUX_DIR/#\~/$HOME}"
 AGENTS_LAZYGIT_DIR="${AGENTS_LAZYGIT_DIR/#\~/$HOME}"
 CLAUDE_HOME_DIR="${CLAUDE_HOME_DIR/#\~/$HOME}"
 CODEX_HOME_DIR="${CODEX_HOME_DIR/#\~/$HOME}"
+CC_SAFETY_NET_HOME_DIR="${CC_SAFETY_NET_HOME_DIR/#\~/$HOME}"
 CURSOR_HOME_DIR="${CURSOR_HOME_DIR/#\~/$HOME}"
 OPENCODE_CONFIG_DIR="${OPENCODE_CONFIG_DIR/#\~/$HOME}"
 CMUX_CONFIG_DIR="${CMUX_CONFIG_DIR/#\~/$HOME}"
 LAZYGIT_CONFIG_DIR="${LAZYGIT_CONFIG_DIR/#\~/$HOME}"
 CLAUDE_HOOKS_SOURCE="$AGENTS_CLAUDE_DIR/hooks"
 CLAUDE_HOOKS_TARGET="$CLAUDE_HOME_DIR/hooks"
+CLAUDE_SETTINGS_SOURCE="$AGENTS_CLAUDE_DIR/settings.json"
+CLAUDE_SETTINGS_TARGET="$CLAUDE_HOME_DIR/settings.json"
 CLAUDE_KNOWN_MISTAKES_SOURCE="$AGENTS_CLAUDE_DIR/known-mistakes.json"
 CLAUDE_KNOWN_MISTAKES_TARGET="$CLAUDE_HOME_DIR/known-mistakes.json"
 CLAUDE_MCP_SOURCE="$AGENTS_CLAUDE_DIR/.mcp.json"
@@ -57,6 +61,13 @@ CODEX_HOOKS_SOURCE="$AGENTS_CODEX_DIR/hooks.json"
 CODEX_HOOKS_TARGET="$CODEX_HOME_DIR/hooks.json"
 CODEX_CONFIG_SOURCE="$AGENTS_CODEX_DIR/config.toml"
 CODEX_CONFIG_TARGET="$CODEX_HOME_DIR/config.toml"
+# cc-safety-net custom rules: a single shared denylist consumed by BOTH Claude Code
+# and Codex (both route PreToolUse:Bash through the cc-safety-net binary), so one
+# source file blocks a command in every tool at once.
+CC_SAFETY_NET_CONFIG_SOURCE="$AGENTS_ROOT_DIR/cc-safety-net/config.json"
+CC_SAFETY_NET_CONFIG_TARGET="$CC_SAFETY_NET_HOME_DIR/config.json"
+CLAUDE_AGENTS_SOURCE_DIR="$AGENTS_CLAUDE_DIR/agents"
+CLAUDE_AGENTS_TARGET_DIR="$CLAUDE_HOME_DIR/agents"
 CODEX_AGENTS_SOURCE_DIR="$AGENTS_CODEX_DIR/agents"
 CODEX_AGENTS_TARGET_DIR="$CODEX_HOME_DIR/agents"
 AGENTS_MD_SOURCE="$AGENTS_ROOT_DIR/AGENTS.md"
@@ -139,6 +150,11 @@ else
 fi
 
 sync_shared_file \
+  "$CLAUDE_SETTINGS_SOURCE" \
+  "$CLAUDE_SETTINGS_TARGET" \
+  "$DIR/backups/claude-config"
+
+sync_shared_file \
   "$CODEX_HOOKS_SOURCE" \
   "$CODEX_HOOKS_TARGET" \
   "$DIR/backups/codex-config"
@@ -147,6 +163,11 @@ sync_shared_file \
   "$CODEX_CONFIG_SOURCE" \
   "$CODEX_CONFIG_TARGET" \
   "$DIR/backups/codex-config"
+
+sync_shared_file \
+  "$CC_SAFETY_NET_CONFIG_SOURCE" \
+  "$CC_SAFETY_NET_CONFIG_TARGET" \
+  "$DIR/backups/cc-safety-net-config"
 
 if [ -d "$AGENTS_CODEX_DIR" ]; then
   echo "SYNC     Codex helper scripts from $AGENTS_CODEX_DIR"
@@ -158,6 +179,19 @@ if [ -d "$AGENTS_CODEX_DIR" ]; then
   done
 else
   echo "SKIP     Missing Codex config source: $AGENTS_CODEX_DIR"
+fi
+
+if [ -d "$CLAUDE_AGENTS_SOURCE_DIR" ]; then
+  echo "SYNC     Claude custom agents from $CLAUDE_AGENTS_SOURCE_DIR"
+  mkdir -p "$CLAUDE_AGENTS_TARGET_DIR"
+  find "$CLAUDE_AGENTS_SOURCE_DIR" -maxdepth 1 \( -type f -o -type l \) -name '*.md' | sort | while read -r agent_file; do
+    sync_shared_file \
+      "$agent_file" \
+      "$CLAUDE_AGENTS_TARGET_DIR/$(basename "$agent_file")" \
+      "$DIR/backups/claude-config/agents"
+  done
+else
+  echo "SKIP     Missing Claude custom agents source: $CLAUDE_AGENTS_SOURCE_DIR"
 fi
 
 if [ -d "$CODEX_AGENTS_SOURCE_DIR" ]; then
